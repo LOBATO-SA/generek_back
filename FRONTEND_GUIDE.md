@@ -32,7 +32,36 @@ Sempre verifique se o token ainda é válido ao iniciar o app:
 
 ---
 
-## 🎵 2. Player de Música
+---
+
+## 🎵 2. Player de Música e Busca (Atualizado)
+
+### Listar e Buscar Músicas
+**GET** `/api/songs`
+
+O endpoint recupera músicas e injeta automaticamente a capa (`cover_url`). Se a música não tiver capa, ele usa o avatar do artista.
+
+- **Filtros (Query Params):**
+  - `search`: Título da música (ex: "My Song").
+  - `genre`: Gênero (ex: "Pop").
+  - `artist`: Nome do Artista (ex: "Michael").
+  
+**Exemplo de Resposta:**
+```json
+{
+  "songs": [
+    {
+      "id": "uuid",
+      "title": "Minha Canção",
+      "file_url": "https://...",
+      "cover_url": "https://...", // Prioridade: Capa da Música > Avatar do Artista > Placeholder
+      "artist_id": {
+        "full_name": "Nome do Artista"
+      }
+    }
+  ]
+}
+```
 
 ### Reprodução
 As músicas retornadas pela API possuem um campo `file_url`. Este é um link direto de streaming (CDN).

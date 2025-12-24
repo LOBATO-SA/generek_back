@@ -110,16 +110,73 @@ const deleteSong = async (req, res, next) => {
 };
 
 /**
- * Get all songs
+ * Get all songs with Search and Cover Art
  * GET /api/songs
+ * Params: ?search=kw&genre=pop&artist=name
  */
 const getSongs = async (req, res, next) => {
   try {
-    const songs = await Song.find()
-      .populate('artist_id', 'user_metadata.full_name email')
+    const { search, genre, artist } = req.query;
+    const query = {};
+
+    // 1. Filter by Title
+    if (search) {
+      query.title = { $regex: search, $options: 'i' };
+    }
+
+    // 2. Filter by Genre
+    if (genre) {
+      query.genre = { $regex: genre, $options: 'i' };
+    }
+    
+    // 3. Filter by Artist Name (requires initial lookup)
+    if (artist) {
+       // Find users matching the name first (User collection)
+       // Note: We search in User metadata
+       const User = require('../models/User'); 
+       const artists = await User.find({
+           'user_metadata.full_name': { $regex: artist, $options: 'i' },
+           'user_metadata.user_type': 'artist'
+       }).select('_id');
+       
+       const artistIds = artists.map(a => a._id);
+       if (artistIds.length > 0) {
+           query.artist_id = { $in: artistIds };
+       } else {
+           // If artist not found, return empty or try title search fallback?
+           // Let's stick to strict filter as requested.
+           query.artist_id = null; // Force empty result
+       }
+    }
+
+    // 4. Fetch Songs
+    const songs = await Song.find(query)
+      .populate('artist_id', 'user_metadata.full_name email') 
       .sort({ created_at: -1 });
 
-    res.status(200).json({ songs });
+    // 5. Enrich with Cover Art (Fallback to Artist Avatar)
+    const Profile = require('../models/Profile');
+    
+    const enrichedSongs = await Promise.all(songs.map(async (song) => {
+        const s = song.toObject();
+        
+        // If no explicit cover, try to get artist's avatar
+        if (!s.cover_url && s.artist_id) {
+            const profile = await Profile.findOne({ user_id: s.artist_id._id });
+            if (profile && profile.avatar_url) {
+                s.cover_url = profile.avatar_url;
+            }
+        }
+        
+        // Fallback placeholder if still null
+        if (!s.cover_url) {
+            s.cover_url = "https://placehold.co/400x400?text=Music";
+        }
+        
+        return s;
+    }));
+
+    res.status(200).json({ songs: enrichedSongs });
   } catch (error) {
     next(error);
   }
