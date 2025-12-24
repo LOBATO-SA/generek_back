@@ -13,7 +13,11 @@ const app = express();
 connectDB();
 
 // Middleware
-app.use(cors()); // Enable CORS for all routes
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+})); // Enable CORS for all routes and methods
 app.use(express.json()); // Parse JSON request bodies
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 
