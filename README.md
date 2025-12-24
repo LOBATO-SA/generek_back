@@ -155,6 +155,52 @@ GET /api/artists/bio
 Authorization: Bearer <token>
 ```
 
+### Contratações
+
+#### Criar Contratação
+```http
+POST /api/bookings
+Authorization: Bearer <token-ouvinte>
+Content-Type: application/json
+
+{
+  "artistId": "id-do-artista",
+  "eventType": "Casamento",
+  "eventDate": "2025-12-25",
+  "eventTime": "20:00",
+  "duration": 4,
+  "location": "Salão de Festas X",
+  "notes": "Traje esporte fino"
+}
+```
+
+#### Listar Contratações
+```http
+GET /api/bookings?status=waiting_confirmation
+Authorization: Bearer <token>
+```
+
+#### Confirmar (Artista ou Ouvinte)
+```http
+PATCH /api/bookings/:id/confirm
+Content-Type: application/json
+
+{ "role": "artist" }
+```
+
+#### Pagar (Ouvinte)
+```http
+PATCH /api/bookings/:id/pay
+```
+
+#### Finalizar (Pos-Evento)
+```http
+PATCH /api/bookings/:id/final-confirm
+Content-Type: application/json
+
+{ "role": "listener" }
+```
+
 ## 🗄️ Banco de Dados
 
 O MongoDB criará automaticamente o banco de dados `generek` com as coleções:

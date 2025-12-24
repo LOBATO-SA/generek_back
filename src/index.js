@@ -31,6 +31,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/songs', require('./routes/song.routes'));
 app.use('/api/artists', require('./routes/artist.routes'));
+app.use('/api/bookings', require('./routes/booking.routes'));
 
 // Health check route
 app.get('/health', (req, res) => {
