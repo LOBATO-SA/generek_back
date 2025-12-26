@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { uploadSong, deleteSong, getSongs, getArtistSongs, getMySongs } = require('../controllers/song.controller');
+const { uploadSong, deleteSong, getSongs, getArtistSongs, getMySongs, registerSong } = require('../controllers/song.controller');
 const auth = require('../middleware/auth');
 const upload = require('../middleware/upload'); // Reusing upload middleware (needs check for audio type)
 
@@ -23,6 +23,13 @@ const audioUpload = multer({
     fileSize: 50 * 1024 * 1024 // 50MB limit for songs
   }
 });
+
+/**
+ * @route   POST /api/songs/register
+ * @desc    Register a song already uploaded to a CDN (Direct-to-Cloud)
+ * @access  Private (Artist)
+ */
+router.post('/register', auth, registerSong);
 
 /**
  * @route   POST /api/songs/upload

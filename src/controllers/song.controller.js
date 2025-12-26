@@ -213,10 +213,59 @@ const getMySongs = async (req, res, next) => {
   }
 };
 
+/**
+ * Register a song that was uploaded directly from the frontend (Client-side upload)
+ * POST /api/songs/register
+ */
+const registerSong = async (req, res, next) => {
+  try {
+    // 1. Check if user is an artist
+    if (req.user.user_metadata.user_type !== 'artist') {
+      return res.status(403).json({
+        error: 'Permission denied',
+        message: 'Only artists can register songs'
+      });
+    }
+
+    const { title, genre, file_url, file_path, cover_url, duration } = req.body;
+
+    // Validation
+    if (!title || !file_url || !file_path) {
+      return res.status(400).json({
+        error: 'Validation failed',
+        message: 'Title, file_url, and file_path are required'
+      });
+    }
+
+    console.log(`📝 Registering song "${title}" for artist ${req.userId}`);
+
+    // Create Song record
+    const song = await Song.create({
+      title,
+      artist_id: req.userId,
+      file_url,
+      file_path,
+      genre: genre || 'Uncategorized',
+      cover_url: cover_url || null,
+      duration: duration || 0
+    });
+
+    res.status(201).json({
+      message: 'Song registered successfully',
+      song
+    });
+
+  } catch (error) {
+    console.error('❌ Song registration error:', error);
+    next(error);
+  }
+};
+
 module.exports = {
   uploadSong,
   deleteSong,
   getSongs,
   getArtistSongs,
-  getMySongs
+  getMySongs,
+  registerSong
 };
