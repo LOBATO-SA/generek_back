@@ -60,7 +60,43 @@ const handleMusicUpload = async (file, songDetails) => {
 };
 ```
 
-## 3. Por que fazer assim?
-- **Sem Limites de Tamanho:** A Vercel limita requisições a 4.5MB. Fazendo direto, você pode subir arquivos de 50MB ou mais.
-- **Velocidade:** O upload é feito direto para os servidores da CDN, sem intermediários.
-- **Segurança:** O backend ainda valida se quem está registrando é um Artista e associa a música ao ID correto via Token JWT.
+## 4. Bônus: Upload de Avatar (Cloudinary Direct)
+
+O Cloudinary também tem limite de timeout na Vercel. Use este padrão para as fotos de perfil:
+
+### Passo A: Pegar Assinatura
+```javascript
+const res = await fetch(`${API_URL}/profile/cloudinary-signature`, {
+  headers: { 'Authorization': `Bearer ${token}` }
+});
+const { signature, timestamp, api_key, cloud_name, folder } = await res.json();
+```
+
+### Passo B: Upload Direto para Cloudinary
+```javascript
+const formData = new FormData();
+formData.append("file", imageFile);
+formData.append("api_key", api_key);
+formData.append("timestamp", timestamp);
+formData.append("signature", signature);
+formData.append("folder", folder);
+
+const cloudRes = await fetch(`https://api.cloudinary.com/v1_1/${cloud_name}/image/upload`, {
+  method: "POST",
+  body: formData
+});
+const { secure_url } = await cloudRes.json();
+```
+
+### Passo C: Salvar URL no Perfil
+```javascript
+await fetch(`${API_URL}/profile`, {
+  method: "PUT",
+  headers: { 
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json' 
+  },
+  body: JSON.stringify({ avatar_url: secure_url })
+});
+```
+

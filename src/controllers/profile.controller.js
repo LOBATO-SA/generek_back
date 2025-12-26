@@ -159,8 +159,45 @@ const uploadAvatar = async (req, res, next) => {
   }
 };
 
+/**
+ * Generate Cloudinary Signature for direct frontend upload
+ * GET /api/profile/cloudinary-signature
+ */
+const getCloudinarySignature = async (req, res, next) => {
+  try {
+    const cloudinary = require('../config/cloudinary');
+    const timestamp = Math.round(new Date().getTime() / 1000);
+    const folder = 'generek/avatars';
+    
+    // Parameters to sign
+    const paramsToSign = {
+      timestamp,
+      folder,
+      // You can add more constraints here (e.g., transformations)
+    };
+
+    const signature = cloudinary.utils.api_sign_request(
+      paramsToSign,
+      process.env.CLOUDINARY_API_SECRET
+    );
+
+    res.status(200).json({
+      signature,
+      timestamp,
+      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+      api_key: process.env.CLOUDINARY_API_KEY,
+      folder
+    });
+
+  } catch (error) {
+    console.error('❌ Cloudinary signature error:', error);
+    next(error);
+  }
+};
+
 module.exports = {
   updateProfile,
   getProfile,
-  uploadAvatar
+  uploadAvatar,
+  getCloudinarySignature
 };
